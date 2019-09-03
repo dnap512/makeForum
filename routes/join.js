@@ -2,6 +2,7 @@ var express = require("express");
 var router = express.Router();
 var User = require("../models/User");
 var util  = require("../util");
+var headers = require("../config/headers");
 var Client = require('node-rest-client').Client;
 var client = new Client();
 
@@ -11,6 +12,18 @@ router.get("/", function(req, res){
 });
 
 router.post("/create", function(req, res){
+    var api = { 
+        headers : headers,
+        data : {
+            walletType : "LUNIVERSE",
+            userKey : req.body.ID
+        }
+    };
+
+    client.post("https://api.luniverse.io/tx/v1.0/wallets", api, function(data, res){
+        console.log(data);
+    });
+
     User.create(req.body, function(err,user){
         if(err){
             req.flash("user", req.body);
@@ -19,19 +32,7 @@ router.post("/create", function(req, res){
         }
         return res.render("../views/join/welcome");
     });
-    var info = { 
-        headers : {
-        "Content-Type" : "application/json", 
-        "Authorization" : "Bearer PwWr9KyjWbhUsNyPtZuJUB9MP7o1t4eHH3c6qa6B8f7xPcse7jWNsdv4YtK4efCC"
-        },
-        data : {
-            walletType : "LUNIVERSE",
-            userKey : req.body.ID
-        }   
-    }
-    client.post("https://api.luniverse.io/tx/v1.0/wallets", info, function(data, res){
-        console.log(data);
-    })
+    
 });
 
 

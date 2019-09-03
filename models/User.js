@@ -4,16 +4,23 @@ var bcrypt = require("bcrypt-nodejs");
 // schema // 1
 var userSchema = mongoose.Schema({
     ID:{type:String, required:[true, "ID is required!"], trim:true, unique:true},
-    password:{type:String, required:[true, "Password is required!"], select:false}
+    password:{type:String, required:[true, "Password is required!"], select:false},
+    address:{type:String},
+    ggow:{type:Number, default:0},
+    ggrt:{type:Number, default:0},
+    gold:{type:Number, default:0}
 },{
     toObject:{virtuals:true}
 });
 
 // virtuals // 2
+userSchema.virtual("GGsum")
+.get(function(){return this._GGsum;})
+.set(function(value){ this._GGsum = value});
+
 userSchema.virtual("passwordConfirmation")
 .get(function(){return this._passwordConfirmation;})
 .set(function(value){ this._passwordConfirmation = value;});
-
 
 userSchema.virtual("originalPassword")
 .get(function(){ return this._originalPassword; })
@@ -26,6 +33,7 @@ userSchema.virtual("currentPassword")
 userSchema.virtual("newPassword")
 .get(function(){ return this._newPassword; })
 .set(function(value){ this._newPassword=value; });
+
 
 
 userSchema.path("password").validate(function(v){

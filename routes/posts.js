@@ -4,6 +4,9 @@ var express = require("express");
 var router  = express.Router();
 var Post    = require("../models/Post");
 var util  = require("../util");
+var headers = require("../config/headers");
+var Client = require('node-rest-client').Client;
+var client = new Client();
 
 // Index 
 router.get("/", function(req, res){
@@ -88,6 +91,7 @@ router.delete("/:id", util.isLoggedin, checkPermission, function(req, res){
 router.post("/:id", util.isLoggedin, function(req,res){
 
   var like;
+
   Post.findOne({_id:req.params.id}, function(err,post){
     if(err){
       req.flash("post", req.body);
@@ -95,18 +99,28 @@ router.post("/:id", util.isLoggedin, function(req,res){
       return res.redirect("/posts/"+req.params.id);
     }
     like = post.likes + 1;
-    console.log(post.likeIDs)
-    if(post.likeIDs == req.user.ID){
+    console.log(post.likeIDs);
+    
+    if(post.likeIDs.indexOf(req.user._id) > -1){
       return res.redirect("/posts/"+req.params.id);
     }
-
-    Post.updateOne({_id:req.params.id}, {likes:like, $push:{likeIDs:req.user.ID}},  function(err, post){
+    
+    Post.findOneAndUpdate({_id:req.params.id}, {likes:like, $push:{likeIDs : req.user._id}},  function(err, post){
       if(err){
        req.flash("post", req.body);
        req.flash("errors", util.parseError(err));
        return res.redirect("/posts/"+req.params.id);
       }
-      res.redirect("/posts/"+req.params.id);
+      var api = { 
+        headers : headers,
+        data : {
+            input:post.address
+        }   
+      }
+      client.post("https://api.luniverse.io/tx/v1.0/transactions/likeReward", api, function(data, res){
+        console.log(data);
+      });
+      return res.redirect("/posts/"+req.params.id);
      });
   });
 
